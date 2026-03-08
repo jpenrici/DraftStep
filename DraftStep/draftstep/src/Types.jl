@@ -369,7 +369,7 @@ function DrawingState()
         "default",           # active layer name
         "",                  # no active group
         800.0,               # canvas width  (px)
-        600.0,                # canvas height (px)
+        600.0,               # canvas height (px)
     )
 end
 

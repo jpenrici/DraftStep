@@ -31,8 +31,9 @@
 module Lexer
 
 # Types must be loaded once by the caller before including this file:
-#   include("Types.jl")
-#   include("Lexer.jl")
+# include("Types.jl")
+# include("Lexer.jl")
+
 # Lexer references Types from the enclosing (caller) module scope.
 import ..Types
 
@@ -152,10 +153,10 @@ LexerState
 Internal mutable state used while scanning a source string.
 
 # Fields
-- `source::String`   : full source text being scanned
+- `source::String`      : full source text being scanned
 - `chars::Vector{Char}` : source split into individual characters
-- `pos::Int`         : current character index (1-based)
-- `line::Int`        : current line number (1-based)
+- `pos::Int`            : current character index (1-based)
+- `line::Int`           : current line number (1-based)
 """
 mutable struct LexerState
     source::String
@@ -328,14 +329,17 @@ A single `TK_EOF` token is always appended at the end.
 # Raises
 - `LexerError` if an unrecognized or malformed token is encountered.
 
+
+
 # Example
 ```julia
+# Types.jl  →  struct Token (kind::TokenKind, value::String, line::Int) end
 tokens = tokenize("forward 100 px\\ncircle 30 px\\n")
-# → [Token(TK_COMMAND,"forward",1), Token(TK_NUMBER,"100",1),
-#    Token(TK_UNIT,"px",1),         Token(TK_NEWLINE,"\\n",1),
-#    Token(TK_COMMAND,"circle",2),  Token(TK_NUMBER,"30",2),
-#    Token(TK_UNIT,"px",2),         Token(TK_NEWLINE,"\\n",2),
-#    Token(TK_EOF,"",2)]
+# → [Token(TK_COMMAND, "forward", 1), Token(TK_NUMBER, "100", 1),
+#    Token(TK_UNIT, "px", 1),         Token(TK_NEWLINE, "\\n", 1),
+#    Token(TK_COMMAND, "circle", 2),  Token(TK_NUMBER, "30", 2),
+#    Token(TK_UNIT, "px", 2),         Token(TK_NEWLINE, "\\n", 2),
+#    Token(TK_EOF, "", 2)]
 ```
 """
 function tokenize(source::String)::Vector{Types.Token}
@@ -350,13 +354,13 @@ function tokenize(source::String)::Vector{Types.Token}
         if c == ' ' || c == '\t'
             advance!(ls)
 
-            # --- Newline ---
+        # --- Newline ---
         elseif c == '\n'
             push!(tokens, Types.Token(Types.TK_NEWLINE, "\\n", line))
             advance!(ls)
             ls.line += 1
 
-            # --- Windows-style line ending (CR+LF) ---
+        # --- Windows-style line ending (CR+LF) ---
         elseif c == '\r'
             advance!(ls)   # discard CR; LF will be handled next iteration
 
@@ -364,15 +368,15 @@ function tokenize(source::String)::Vector{Types.Token}
         elseif is_digit(c) || (c == '-' && is_digit(peek_next(ls)))
             push!(tokens, scan_number!(ls, line))
 
-            # --- Bare word: command keyword or unit ---
+        # --- Bare word: command keyword or unit ---
         elseif is_alpha(c)
             push!(tokens, scan_word!(ls, line))
 
-            # --- Quoted string ---
+        # --- Quoted string ---
         elseif c == '"'
             push!(tokens, scan_string!(ls, line))
 
-            # --- Color literal (#RRGGBB) or comment (# text) ---
+        # --- Color literal (#RRGGBB) or comment (# text) ---
         elseif c == '#'
             if is_hex_digit(peek_next(ls))
                 push!(tokens, scan_color!(ls, line))
@@ -380,7 +384,7 @@ function tokenize(source::String)::Vector{Types.Token}
                 push!(tokens, scan_comment!(ls, line))
             end
 
-            # --- Unknown character ---
+        # --- Unknown character ---
         else
             throw(LexerError("unexpected character '$(c)'", line))
         end

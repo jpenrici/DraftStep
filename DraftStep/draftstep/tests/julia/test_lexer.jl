@@ -21,7 +21,7 @@ using Test
 # ---------------------------------------------------------------------------
 # Load modules — Types must be included BEFORE Lexer so that Lexer's
 # `import ..Types` resolves to the same module instance used in the tests.
-# Both share Main.Types — no double-include, no identity mismatch.
+# Both share Main.Types — no double-include, no identity mismatch!
 # ---------------------------------------------------------------------------
 include("../../src/Types.jl")
 import .Types
@@ -51,7 +51,7 @@ Extracts all token kinds including TK_NEWLINE and TK_COMMENT, skips only TK_EOF.
 kinds_all(tokens) = [t.kind for t in tokens if t.kind != Types.TK_EOF]
 
 """
-    values(tokens) → Vector{String}
+values(tokens) → Vector{String}
 
 Extracts token values — skips TK_EOF, TK_NEWLINE, TK_COMMENT.
 """
@@ -248,6 +248,14 @@ values(tokens) = [t.value for t in tokens
             src = "# comment\nforward 100 px\n"
             tokens = Lexer.tokenize(src)
             # comment → newline → command (using kinds_all to include all kinds)
+            @test kinds_all(tokens)[1] == Types.TK_COMMENT
+            @test kinds_all(tokens)[2] == Types.TK_NEWLINE
+            @test kinds_all(tokens)[3] == Types.TK_COMMAND
+        end
+
+        @testset "comment character present but no message followed by newline" begin
+            src = "#\nforward 100 px\n"
+            tokens = Lexer.tokenize(src)
             @test kinds_all(tokens)[1] == Types.TK_COMMENT
             @test kinds_all(tokens)[2] == Types.TK_NEWLINE
             @test kinds_all(tokens)[3] == Types.TK_COMMAND

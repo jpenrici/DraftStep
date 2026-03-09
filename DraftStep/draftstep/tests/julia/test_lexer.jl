@@ -40,8 +40,8 @@ kinds(tokens) → Vector{Types.TokenKind}
 Extracts only meaningful token kinds — skips TK_EOF, TK_NEWLINE, TK_COMMENT.
 Use `kinds_all` when newlines or comments are part of the assertion.
 """
-kinds(tokens) = [t.kind for t in tokens
-    if t.kind ∉ (Types.TK_EOF, Types.TK_NEWLINE, Types.TK_COMMENT)]
+kinds(tokens) =
+    [t.kind for t in tokens if t.kind ∉ (Types.TK_EOF, Types.TK_NEWLINE, Types.TK_COMMENT)]
 
 """
 kinds_all(tokens) → Vector{Types.TokenKind}
@@ -55,8 +55,8 @@ values(tokens) → Vector{String}
 
 Extracts token values — skips TK_EOF, TK_NEWLINE, TK_COMMENT.
 """
-values(tokens) = [t.value for t in tokens
-    if t.kind ∉ (Types.TK_EOF, Types.TK_NEWLINE, Types.TK_COMMENT)]
+values(tokens) =
+    [t.value for t in tokens if t.kind ∉ (Types.TK_EOF, Types.TK_NEWLINE, Types.TK_COMMENT)]
 
 
 # =============================================================================
@@ -164,8 +164,10 @@ values(tokens) = [t.value for t in tokens
             tokens = Lexer.tokenize("rect 100 px 50 px")
             @test kinds(tokens) == [
                 Types.TK_COMMAND,
-                Types.TK_NUMBER, Types.TK_UNIT,
-                Types.TK_NUMBER, Types.TK_UNIT,
+                Types.TK_NUMBER,
+                Types.TK_UNIT,
+                Types.TK_NUMBER,
+                Types.TK_UNIT,
             ]
         end
 
@@ -253,7 +255,14 @@ values(tokens) = [t.value for t in tokens
             @test kinds_all(tokens)[3] == Types.TK_COMMAND
         end
 
-        @testset "comment character present but no message followed by newline" begin
+        @testset "hash after command starts a comment token" begin
+            src = "forward 100 px # move ahead\n"
+            tokens = Lexer.tokenize(src)
+            comment_tokens = filter(t -> t.kind == Types.TK_COMMENT, tokens)
+            @test length(comment_tokens) == 1
+        end
+
+        @testset "comment with no message followed by newline" begin
             src = "#\nforward 100 px\n"
             tokens = Lexer.tokenize(src)
             @test kinds_all(tokens)[1] == Types.TK_COMMENT
@@ -261,11 +270,25 @@ values(tokens) = [t.value for t in tokens
             @test kinds_all(tokens)[3] == Types.TK_COMMAND
         end
 
-        @testset "hash after command starts a comment token" begin
-            src = "forward 100 px # move ahead\n"
+        @testset "color followed by inline comment on same line" begin
+            # #FF0000 → TK_COLOR  (peek_next is hex digit)
+            # # red   → TK_COMMENT (peek_next is space, not hex digit)
+            src = "color #FF0000 # red color\n"
             tokens = Lexer.tokenize(src)
+            @test kinds(tokens) == [Types.TK_COMMAND, Types.TK_COLOR]
             comment_tokens = filter(t -> t.kind == Types.TK_COMMENT, tokens)
             @test length(comment_tokens) == 1
+            @test occursin("red", comment_tokens[1].value)
+        end
+
+        @testset "color and comment are distinguished by character after hash" begin
+            # standalone color — next char is hex digit
+            color_tokens = Lexer.tokenize("#FF5733")
+            @test kinds_all(color_tokens) == [Types.TK_COLOR]
+
+            # standalone comment — next char is space
+            comment_tokens = Lexer.tokenize("# FF5733")
+            @test kinds_all(comment_tokens) == [Types.TK_COMMENT]
         end
 
     end # comments
@@ -354,6 +377,56 @@ values(tokens) = [t.value for t in tokens
         end
 
     end # error handling
+
+    # -------------------------------------------------------------------------
+    @testset "7 · print_tokens" begin
+
+        @testset "prints without error for a normal program" begin
+            src = "forward 100 px\ncircle 30 px\n"
+            tokens = Lexer.tokenize(src)
+            # Should not throw — capture output to avoid polluting test output
+            buf = IOBuffer()
+            @test_nowarn Lexer.print_tokens(tokens; io = buf)
+        end
+
+        @testset "output contains token kind strings" begin
+            tokens = Lexer.tokenize("forward 100 px\n")
+            buf = IOBuffer()
+            Lexer.print_tokens(tokens; io = buf)
+            output = String(take!(buf))
+            @test occursin("TK_COMMAND", output)
+            @test occursin("TK_NUMBER", output)
+            @test occursin("TK_UNIT", output)
+            @test occursin("TK_NEWLINE", output)
+            @test occursin("TK_EOF", output)
+        end
+
+        @testset "output contains token values" begin
+            tokens = Lexer.tokenize("circle 30 px\n")
+            buf = IOBuffer()
+            Lexer.print_tokens(tokens; io = buf)
+            output = String(take!(buf))
+            @test occursin("circle", output)
+            @test occursin("30", output)
+            @test occursin("px", output)
+        end
+
+        @testset "output contains line numbers" begin
+            tokens = Lexer.tokenize("forward 100 px\ncircle 30 px\n")
+            buf = IOBuffer()
+            Lexer.print_tokens(tokens; io = buf)
+            output = String(take!(buf))
+            @test occursin("1", output)
+            @test occursin("2", output)
+        end
+
+        @testset "prints empty token list without error" begin
+            tokens = Lexer.tokenize("")
+            buf = IOBuffer()
+            @test_nowarn Lexer.print_tokens(tokens; io = buf)
+        end
+
+    end # print_tokens
 
 end # DraftStep Lexer
 

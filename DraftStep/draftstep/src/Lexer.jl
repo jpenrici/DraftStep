@@ -37,7 +37,7 @@ module Lexer
 # Lexer references Types from the enclosing (caller) module scope.
 import ..Types
 
-export tokenize, LexerError
+export tokenize, tokenize_file, print_tokens, LexerError
 
 
 # =============================================================================
@@ -407,6 +407,50 @@ Convenience wrapper: reads a `.draftstep` file from disk and tokenizes it.
 function tokenize_file(path::String)::Vector{Types.Token}
     source = read(path, String)
     return tokenize(source)
+end
+
+
+# =============================================================================
+# SECTION 7 — Debug utilities
+# =============================================================================
+
+# Column widths for aligned output
+const _KIND_WIDTH  = 12
+const _VALUE_WIDTH = 24
+
+"""
+print_tokens(tokens; io=stdout)
+
+Pretty-prints a token list to `io` (defaults to stdout).
+Useful for debugging the Lexer output without serializing to disk.
+
+    Each line shows:
+    [line] KIND   "value"
+
+    # Example output
+    [ 1]  TK_COMMAND    "forward"
+    [ 1]  TK_NUMBER     "100"
+    [ 1]  TK_UNIT       "px"
+    [ 1]  TK_NEWLINE    "\\n"
+    [ 2]  TK_COMMAND    "circle"
+    [ 2]  TK_NUMBER     "30"
+    [ 2]  TK_UNIT       "px"
+    [ 2]  TK_EOF        ""
+"""
+function print_tokens(tokens::Vector{Types.Token}; io::IO=stdout)
+    println(io, "─────────────────────────────────────────")
+    println(io, "  DraftStep Lexer — token dump")
+    println(io, "  total: $(length(tokens)) token(s)")
+    println(io, "─────────────────────────────────────────")
+
+    for tok in tokens
+        kind_str  = rpad(string(tok.kind),  _KIND_WIDTH)
+        value_str = lpad("\"$(tok.value)\"", _VALUE_WIDTH)
+        line_str  = lpad(string(tok.line), 3)
+        println(io, "  [$(line_str)]  $(kind_str)  $(value_str)")
+    end
+
+    println(io, "─────────────────────────────────────────")
 end
 
 end # module Lexer

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="400" height="350" viewBox="0 0 400 350">
+  <g id="layer-default" inkscape:label="default" inkscape:groupmode="layer">
+  </g>
+  <g id="layer-base" inkscape:label="base" inkscape:groupmode="layer">
+    <rect x="100" y="140" width="200" height="160" stroke="#AA0000" stroke-width="2" fill="#000000"/>
+  </g>
+</svg>

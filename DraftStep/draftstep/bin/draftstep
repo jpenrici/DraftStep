@@ -1,1 +1,172 @@
-# Entrypoint CLI (Julia script)
+#!/usr/bin/env julia
+# =============================================================================
+# bin/draftstep — DraftStep CLI Entrypoint
+# =============================================================================
+#
+# Usage:
+#   julia bin/draftstep <input.draftstep> [output.svg]
+#
+# Arguments:
+#   input.draftstep   path to the source file (required)
+#   output.svg        path for the SVG output  (optional)
+#                     default: same name as input with .svg extension
+#
+# Examples:
+#   julia bin/draftstep examples/hello.draftstep
+#   julia bin/draftstep examples/hello.draftstep tmp/hello.svg
+#
+# Exit codes:
+#   0 — success
+#   1 — usage error  (wrong number of arguments)
+#   2 — file error   (input not found, output not writable)
+#   3 — parse error  (LexerError or ParserError in the source file)
+#   4 — runtime error (InterpreterError or RendererError)
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Locate src/ relative to this script — works regardless of working directory
+# ---------------------------------------------------------------------------
+const SCRIPT_DIR = dirname(abspath(@__FILE__))
+const SRC_DIR    = joinpath(SCRIPT_DIR, "..", "src")
+
+include(joinpath(SRC_DIR, "Types.jl"))
+import .Types
+
+include(joinpath(SRC_DIR, "Lexer.jl"))
+import .Lexer
+
+include(joinpath(SRC_DIR, "Parser.jl"))
+import .Parser
+
+include(joinpath(SRC_DIR, "Interpreter.jl"))
+import .Interpreter
+
+include(joinpath(SRC_DIR, "Renderer.jl"))
+import .Renderer
+
+include(joinpath(SRC_DIR, "Renderers", "SVGRenderer.jl"))
+import .SVGRenderer
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+function usage()
+    println(stderr, """
+    DraftStep — command-driven vector drawing tool
+
+    Usage:
+      julia bin/draftstep <input.draftstep> [output.svg]
+
+    Arguments:
+      input.draftstep   source file to interpret  (required)
+      output.svg        SVG output path           (optional, default: <input>.svg)
+
+    Examples:
+      julia bin/draftstep examples/hello.draftstep
+      julia bin/draftstep examples/hello.draftstep tmp/hello.svg
+    """)
+end
+
+"""
+default_output(input_path) → String
+
+Returns the default output path: same directory and stem, `.svg` extension.
+"""
+function default_output(input_path::String)::String
+    dir  = dirname(input_path)
+    stem = splitext(basename(input_path))[1]
+    return joinpath(dir == "" ? "." : dir, stem * ".svg")
+end
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+function main(args::Vector{String})
+
+    # --- Argument validation ---
+    if length(args) < 1 || length(args) > 2
+        usage()
+        exit(1)
+    end
+
+    input_path  = args[1]
+    output_path = length(args) == 2 ? args[2] : default_output(input_path)
+
+    # --- Input file check ---
+    if !isfile(input_path)
+        println(stderr, "error: input file not found: '$input_path'")
+        exit(2)
+    end
+
+    println("  input  : $input_path")
+    println("  output : $output_path")
+    println()
+
+    # --- Lexer ---
+    print("  [1/4] tokenizing  ... ")
+    local tokens
+    try
+        tokens = Lexer.tokenize_file(input_path)
+        println("$(length(tokens)) tokens")
+    catch e
+        println("FAILED")
+        println(stderr, "\n$(e)")
+        exit(3)
+    end
+
+    # --- Parser ---
+    print("  [2/4] parsing     ... ")
+    local program
+    try
+        program = Parser.parse(tokens)
+        println("$(length(program.commands)) commands")
+    catch e
+        println("FAILED")
+        println(stderr, "\n$(e)")
+        exit(3)
+    end
+
+    # --- Interpreter ---
+    print("  [3/4] interpreting ... ")
+    local state
+    try
+        state = Interpreter.execute(program)
+        total = sum(
+            length(l.shapes) + sum(length(g.shapes) for g in l.groups; init=0)
+            for l in state.layers; init=0)
+        println("$(length(state.layers)) layers, $total shapes")
+    catch e
+        println("FAILED")
+        println(stderr, "\n$(e)")
+        exit(4)
+    end
+
+    # --- Renderer ---
+    print("  [4/4] rendering   ... ")
+    try
+        # Ensure output directory exists
+        out_dir = dirname(output_path)
+        if out_dir != "" && !isdir(out_dir)
+            mkpath(out_dir)
+        end
+        SVGRenderer.render(state, output_path)
+        size_kb = round(filesize(output_path) / 1024; digits=1)
+        println("$(size_kb) KB")
+    catch e
+        println("FAILED")
+        println(stderr, "\n$(e)")
+        exit(4)
+    end
+
+    println()
+    println("  done → $output_path")
+end
+
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    main(ARGS)
+end

@@ -1,1 +1,15 @@
-# Basic usage example
+# hello.draftstep
+canvas 400 350
+
+layer "base"
+color #aa0000
+strokewidth 2 px
+fill #000000
+
+penup
+right 90 deg
+forward 140 px
+left 90 deg
+forward 100 px
+pendown
+rect 200 px 160 px

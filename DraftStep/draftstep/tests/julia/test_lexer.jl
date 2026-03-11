@@ -114,6 +114,12 @@ values(tokens) =
             @test values(tokens) == ["background"]   # quotes stripped
         end
 
+        @testset "color 8-digit" begin
+            tokens = Lexer.tokenize("#FF573380")
+            @test kinds(tokens) == [Types.TK_COLOR]
+            @test values(tokens) == ["#FF573380"]
+        end
+
         @testset "color 6-digit" begin
             tokens = Lexer.tokenize("#FF5733")
             @test kinds(tokens) == [Types.TK_COLOR]
@@ -181,6 +187,12 @@ values(tokens) =
             tokens = Lexer.tokenize("color #FF5733")
             @test kinds(tokens) == [Types.TK_COMMAND, Types.TK_COLOR]
             @test values(tokens) == ["color", "#FF5733"]
+        end
+
+        @testset "color hex argument" begin
+            tokens = Lexer.tokenize("color #FF573380")
+            @test kinds(tokens) == [Types.TK_COMMAND, Types.TK_COLOR]
+            @test values(tokens) == ["color", "#FF573380"]
         end
 
         @testset "strokewidth float" begin
@@ -270,10 +282,21 @@ values(tokens) =
             @test kinds_all(tokens)[3] == Types.TK_COMMAND
         end
 
-        @testset "color followed by inline comment on same line" begin
-            # #FF0000 → TK_COLOR  (peek_next is hex digit)
-            # # red   → TK_COMMENT (peek_next is space, not hex digit)
+        @testset "color 6-digit followed by inline comment on same line" begin
+            # #FF0000 → TK_COLOR (6 hex digits, valid)
+            # # red   → TK_COMMENT (# followed by space, not a hex digit)
             src = "color #FF0000 # red color\n"
+            tokens = Lexer.tokenize(src)
+            @test kinds(tokens) == [Types.TK_COMMAND, Types.TK_COLOR]
+            comment_tokens = filter(t -> t.kind == Types.TK_COMMENT, tokens)
+            @test length(comment_tokens) == 1
+            @test occursin("red", comment_tokens[1].value)
+        end
+
+        @testset "color 8-digit followed by inline comment on same line" begin
+            # #FF0000FF → TK_COLOR   (8 hex digits, valid)
+            # # red     → TK_COMMENT (# followed by space, not a hex digit)
+            src = "color #FF0000FF # red color\n"
             tokens = Lexer.tokenize(src)
             @test kinds(tokens) == [Types.TK_COMMAND, Types.TK_COLOR]
             comment_tokens = filter(t -> t.kind == Types.TK_COMMENT, tokens)
@@ -351,9 +374,16 @@ values(tokens) =
             @test_throws Lexer.LexerError Lexer.tokenize("unknowncommand")
         end
 
-        @testset "invalid color length raises LexerError" begin
-            # 8-digit (#RRGGBBAA) is not supported
-            @test_throws Lexer.LexerError Lexer.tokenize("#AABBCCDD")
+        @testset "invalid color 4-digit raises LexerError" begin
+            @test_throws Lexer.LexerError Lexer.tokenize("#ABCD")
+        end
+
+        @testset "invalid color 5-digit raises LexerError" begin
+            @test_throws Lexer.LexerError Lexer.tokenize("#ABCDE")
+        end
+
+        @testset "invalid color 7-digit raises LexerError" begin
+            @test_throws Lexer.LexerError Lexer.tokenize("#ABCDEF1")
         end
 
         @testset "unterminated string raises LexerError" begin

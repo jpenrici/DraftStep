@@ -97,6 +97,33 @@ function fill_attr(shape::Types.Shape)::String
 end
 
 """
+color_opacity(color) → String or Nothing
+
+Returns the opacity ratio.
+"""
+function color_opacity(color::Types.Color)::Union{String,Nothing}
+    color.a == 255 && return nothing   # opaque — does not emit attribute
+    color.a == 0 && return nothing   # none — does not emit attribute
+    return string(round(color.a / 255.0; digits = 3))
+end
+
+stroke_opacity(shape::Types.Shape) = color_opacity(shape.stroke)
+fill_opacity(shape::Types.Shape) = color_opacity(shape.fill)
+
+"""
+opacity_attrs(shape) → Tuple{String, String}
+
+Returns the line and padding opacity attributes in a tuple, or "" if not needed.
+"""
+function opacity_attrs(shape::Types.Shape)::Tuple{String,String}
+    s_op = stroke_opacity(shape)
+    f_op = fill_opacity(shape)
+    s_attr = s_op === nothing ? "" : " stroke-opacity=\"$s_op\""
+    f_attr = f_op === nothing ? "" : " fill-opacity=\"$f_op\""
+    return s_attr, f_attr
+end
+
+"""
 fmt(r, v) → String
 
 Formats a Float64 coordinate value for SVG output.
@@ -118,46 +145,29 @@ end
 # Each function returns a single SVG element string (no newline).
 # =============================================================================
 
-"""
-svg_line(r, shape) → String
-
-Serializes a `SK_LINE` shape to an SVG `<line>` element.
-Requires exactly 2 points: start and end.
-"""
 function svg_line(r::SVG, shape::Types.Shape)::String
     p1, p2 = shape.points[1], shape.points[2]
     stroke = stroke_attr(shape)
+    s_op = stroke_opacity(shape)
+    op_attr = s_op === nothing ? "" : " stroke-opacity=\"$s_op\""
     "<line x1=\"$(fmt(r,p1.x))\" y1=\"$(fmt(r,p1.y))\" " *
     "x2=\"$(fmt(r,p2.x))\" y2=\"$(fmt(r,p2.y))\" " *
-    "stroke=\"$stroke\" stroke-width=\"$(fmt(r,shape.stroke_width))\" fill=\"none\"/>"
+    "stroke=\"$stroke\"$op_attr stroke-width=\"$(fmt(r,shape.stroke_width))\" fill=\"none\"/>"
 end
 
-"""
-svg_circle(r, shape) → String
-
-Serializes a `SK_CIRCLE` shape to an SVG `<circle>` element.
-Requires 2 points: center (points[1]) and a radius point (points[2]).
-Radius = Euclidean distance between the two points.
-"""
 function svg_circle(r::SVG, shape::Types.Shape)::String
     center = shape.points[1]
     rpt = shape.points[2]
     radius = sqrt((rpt.x - center.x)^2 + (rpt.y - center.y)^2)
     stroke = stroke_attr(shape)
     fill = fill_attr(shape)
+    s_attr, f_attr = opacity_attrs(shape)
     "<circle cx=\"$(fmt(r,center.x))\" cy=\"$(fmt(r,center.y))\" " *
     "r=\"$(fmt(r,radius))\" " *
-    "stroke=\"$stroke\" stroke-width=\"$(fmt(r,shape.stroke_width))\" fill=\"$fill\"/>"
+    "stroke=\"$stroke\"$s_attr stroke-width=\"$(fmt(r,shape.stroke_width))\" " *
+    "fill=\"$fill\"$f_attr/>"
 end
 
-"""
-svg_rect(r, shape) → String
-
-Serializes a `SK_RECT` shape to an SVG `<rect>` element.
-Requires 4 points: top-left, top-right, bottom-right, bottom-left.
-Width  = points[2].x - points[1].x
-Height = points[4].y - points[1].y
-"""
 function svg_rect(r::SVG, shape::Types.Shape)::String
     tl = shape.points[1]
     tr = shape.points[2]
@@ -166,42 +176,36 @@ function svg_rect(r::SVG, shape::Types.Shape)::String
     height = bl.y - tl.y
     stroke = stroke_attr(shape)
     fill = fill_attr(shape)
+    s_attr, f_attr = opacity_attrs(shape)
     "<rect x=\"$(fmt(r,tl.x))\" y=\"$(fmt(r,tl.y))\" " *
     "width=\"$(fmt(r,width))\" height=\"$(fmt(r,height))\" " *
-    "stroke=\"$stroke\" stroke-width=\"$(fmt(r,shape.stroke_width))\" fill=\"$fill\"/>"
+    "stroke=\"$stroke\"$s_attr stroke-width=\"$(fmt(r,shape.stroke_width))\" " *
+    "fill=\"$fill\"$f_attr/>"
 end
 
-"""
-svg_path(r, shape) → String
-
-Serializes a `SK_PATH` shape to an SVG `<polyline>` element.
-Accepts any number of points.
-"""
 function svg_path(r::SVG, shape::Types.Shape)::String
     pts = join(["$(fmt(r,p.x)),$(fmt(r,p.y))" for p in shape.points], " ")
     stroke = stroke_attr(shape)
     fill = fill_attr(shape)
-    "<polyline points=\"$pts\" stroke=\"$stroke\" " *
-    "stroke-width=\"$(fmt(r,shape.stroke_width))\" fill=\"$fill\"/>"
+    s_attr, f_attr = opacity_attrs(shape)
+    "<polyline points=\"$pts\" " *
+    "stroke=\"$stroke\"$s_attr stroke-width=\"$(fmt(r,shape.stroke_width))\" " *
+    "fill=\"$fill\"$f_attr/>"
 end
 
-"""
-svg_bezier(r, shape) → String
-
-Serializes a `SK_BEZIER` shape to an SVG `<path>` cubic bezier element.
-Requires exactly 4 control points: P0 P1 P2 P3.
-"""
 function svg_bezier(r::SVG, shape::Types.Shape)::String
     p = shape.points
     stroke = stroke_attr(shape)
     fill = fill_attr(shape)
+    s_attr, f_attr = opacity_attrs(shape)
     d =
         "M $(fmt(r,p[1].x)) $(fmt(r,p[1].y)) " *
         "C $(fmt(r,p[2].x)) $(fmt(r,p[2].y)), " *
         "$(fmt(r,p[3].x)) $(fmt(r,p[3].y)), " *
         "$(fmt(r,p[4].x)) $(fmt(r,p[4].y))"
-    "<path d=\"$d\" stroke=\"$stroke\" " *
-    "stroke-width=\"$(fmt(r,shape.stroke_width))\" fill=\"$fill\"/>"
+    "<path d=\"$d\" " *
+    "stroke=\"$stroke\"$s_attr stroke-width=\"$(fmt(r,shape.stroke_width))\" " *
+    "fill=\"$fill\"$f_attr/>"
 end
 
 """

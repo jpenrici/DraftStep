@@ -280,7 +280,10 @@ end
 scan_color!(ls, line) → Token
 
 Scans a hex color literal starting with `#`.
-Accepts 3-digit shorthand (`#RGB`) and 6-digit full form (`#RRGGBB`).
+Accepts three formats:
+- `#RGB`      — 3-digit shorthand (expanded to #RRGGBB)
+- `#RRGGBB`   — 6-digit opaque color
+- `#RRGGBBAA` — 8-digit color with alpha channel
 Raises `LexerError` for invalid formats.
 """
 function scan_color!(ls::LexerState, line::Int)::Types.Token
@@ -292,8 +295,8 @@ function scan_color!(ls::LexerState, line::Int)::Types.Token
     end
 
     hex = String(buf)
-    if length(hex) != 3 && length(hex) != 6
-        throw(LexerError("invalid color literal '#$hex' — expected #RGB or #RRGGBB", line))
+    if length(hex) != 3 && length(hex) != 6 && length(hex) != 8
+        throw(LexerError("invalid color literal '#$hex' — expected #RGB or #RRGGBB or #RRGGBBAA", line))
     end
 
     return Types.Token(Types.TK_COLOR, "#" * hex, line)

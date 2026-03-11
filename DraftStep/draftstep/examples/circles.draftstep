@@ -1,120 +1,143 @@
-# circles.draftstep — composition with circles
-# Demonstrates: filled circles, transparent circles, layering and color.
+# circles.draftstep — composition with transparent circles
+# Demonstrates: fill with alpha (#RRGGBBAA), stroke-only rings,
+# layering, color blending and the new moveto command.
 #
-# The drawing is inspired by bubble/cell diagrams:
-#   - layer background : large soft backdrop circles
-#   - layer rings      : transparent outline-only rings
-#   - layer bubbles    : small vivid filled circles
-#   - layer accent     : tiny highlight dots
+# Alpha channel: #RRGGBBAA where AA=FF opaque, AA=80 ~50%, AA=00 transparent
+#
+# Canvas 500 x 400
 
 canvas 500 400
 
 # ── layer: background ─────────────────────────
-# Large muted filled circles as a soft backdrop
+# Large soft circles — lightly filled, no stroke
 layer "background"
 strokewidth 0 px
 
-fill #E8D5F5
-moveto 120 130
-circle 100 px
-
-fill #D5EAF5
-moveto 340 200
+fill #E8D5F580
+moveto 130 150
 circle 110 px
 
-fill #F5EAD5
-moveto 240 310
-circle 90 px
+fill #D5EAF580
+moveto 360 180
+circle 120 px
+
+fill #F5EAD580
+moveto 250 320
+circle 75 px
 
 # ── layer: rings ──────────────────────────────
-# Transparent circles — stroke only, no fill
+# Stroke-only rings — fill fully transparent
 layer "rings"
-fill #000000
 strokewidth 2 px
 
 color #9B59B6
-moveto 120 130
-circle 100 px
-
-color #2980B9
-moveto 340 200
+fill #00000000
+moveto 130 150
 circle 110 px
 
-color #E67E22
-moveto 240 310
-circle 90 px
+color #2980B9
+fill #00000000
+moveto 360 180
+circle 120 px
 
-# medium rings — overlapping areas
-color #27AE60
+color #E67E22
+fill #00000000
+moveto 250 320
+circle 75 px
+
+# inner overlap rings — thinner
 strokewidth 1 px
-moveto 220 190
-circle 60 px
+
+color #27AE60
+fill #00000000
+moveto 230 200
+circle 65 px
 
 color #C0392B
-moveto 280 230
-circle 55 px
+fill #00000000
+moveto 290 240
+circle 60 px
 
 # ── layer: bubbles ────────────────────────────
-# Small vivid filled circles scattered across the canvas
+# Medium vivid circles with semi-transparent fill
 layer "bubbles"
 strokewidth 1 px
 
 color #8E44AD
-fill #D7BDE2
+fill #D7BDE2CC
 moveto 80 80
-circle 25 px
-
-color #1A5276
-fill #AED6F1
-moveto 390 100
 circle 30 px
 
+color #1A5276
+fill #AED6F1CC
+moveto 410 90
+circle 35 px
+
 color #1E8449
-fill #A9DFBF
-moveto 160 320
-circle 20 px
+fill #A9DFBFCC
+moveto 155 335
+circle 25 px
 
 color #784212
-fill #F0B27A
-moveto 420 310
-circle 28 px
+fill #F0B27ACC
+moveto 440 320
+circle 32 px
 
 color #922B21
-fill #F1948A
-moveto 270 80
-circle 22 px
+fill #F1948ACC
+moveto 270 70
+circle 28 px
 
 color #1F618D
-fill #85C1E9
-moveto 80 260
-circle 18 px
+fill #85C1E9CC
+moveto 70 270
+circle 22 px
 
 color #6C3483
-fill #C39BD3
-moveto 450 200
-circle 24 px
+fill #C39BD3CC
+moveto 460 210
+circle 27 px
 
-# ── layer: accent ─────────────────────────────
-# Tiny white highlight dots — give bubbles a glossy feel
-layer "accent"
-color #FFFFFF
-fill #FFFFFF
+# ── layer: glow ───────────────────────────────
+# Larger circles with very low alpha — soft glow effect
+layer "glow"
 strokewidth 0 px
 
-moveto 68 68
-circle 6 px
+fill #FFFFFF30
+moveto 80 80
+circle 45 px
 
-moveto 378 88
+fill #FFFFFF30
+moveto 410 90
+circle 50 px
+
+fill #FFFFFF30
+moveto 270 70
+circle 42 px
+
+# ── layer: accent ─────────────────────────────
+# Small white highlight dots — glossy effect
+layer "accent"
+strokewidth 0 px
+fill #FFFFFFCC
+
+moveto 68 68
 circle 7 px
 
-moveto 150 308
-circle 5 px
+moveto 397 77
+circle 8 px
 
-moveto 408 298
+moveto 143 323
 circle 6 px
 
-moveto 258 68
+moveto 427 308
+circle 7 px
+
+moveto 257 57
+circle 6 px
+
+moveto 58 258
 circle 5 px
 
-moveto 438 188
+moveto 447 198
 circle 6 px

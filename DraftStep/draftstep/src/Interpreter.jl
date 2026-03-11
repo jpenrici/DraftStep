@@ -100,7 +100,8 @@ end
 """
 parse_color(hex, line) → Color
 
-Parses a hex color string (#RGB or #RRGGBB) into a `Color` value.
+Parses a hex color string (#RGB, #RRGGBB or #RRGGBBAA) into a `Color` value.
+Expands #RGB → #RRGGBB → #RRGGBBAA internally before parsing.
 Raises `InterpreterError` if the format is invalid.
 """
 function parse_color(hex::String, line::Int)::Types.Color
@@ -111,14 +112,20 @@ function parse_color(hex::String, line::Int)::Types.Color
         h = string(h[1], h[1], h[2], h[2], h[3], h[3])
     end
 
-    if length(h) != 6
+    # Expand 6-digit #RRGGBB → #RRGGBBAA
+    if length(h) == 6
+        h = string(h, "FF")
+    end
+
+    if length(h) != 8
         throw(InterpreterError("invalid color '$hex'", line))
     end
 
     r = parse(UInt8, h[1:2], base = 16)
     g = parse(UInt8, h[3:4], base = 16)
     b = parse(UInt8, h[5:6], base = 16)
-    return Types.Color(r, g, b)
+    a = parse(UInt8, h[7:8], base = 16)
+    return Types.Color(r, g, b, a)
 end
 
 """

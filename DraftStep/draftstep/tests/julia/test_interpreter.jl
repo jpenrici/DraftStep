@@ -284,12 +284,31 @@ const ε = 1e-9
     # -------------------------------------------------------------------------
     @testset "5 · Style" begin
 
+        @testset "color sets stroke_color with 8 hex digits" begin
+            state = run("color #FF573380\n")
+            c = state.cursor.stroke_color
+            @test c.r == 0xFF
+            @test c.g == 0x57
+            @test c.b == 0x33
+            @test c.a == 0x80
+        end
+
         @testset "color sets stroke_color" begin
             state = run("color #FF5733\n")
             c = state.cursor.stroke_color
             @test c.r == 0xFF
             @test c.g == 0x57
             @test c.b == 0x33
+            @test c.a == 0xFF
+        end
+
+        @testset "fill sets fill_color with 8 hex digits" begin
+            state = run("fill #00FF0080\n")
+            c = state.cursor.fill_color
+            @test c.r == 0x00
+            @test c.g == 0xFF
+            @test c.b == 0x00
+            @test c.a == 0x80
         end
 
         @testset "fill sets fill_color" begin
@@ -298,6 +317,7 @@ const ε = 1e-9
             @test c.r == 0x00
             @test c.g == 0xFF
             @test c.b == 0x00
+            @test c.a == 0xFF
         end
 
         @testset "3-digit color shorthand is expanded" begin
@@ -306,6 +326,7 @@ const ε = 1e-9
             @test c.r == 0xFF
             @test c.g == 0x55
             @test c.b == 0x33
+            @test c.a == 0xFF
         end
 
         @testset "strokewidth sets stroke_width" begin
@@ -319,6 +340,7 @@ const ε = 1e-9
             @test shape.stroke.r == 0xFF
             @test shape.stroke.g == 0x00
             @test shape.stroke.b == 0x00
+            @test shape.stroke.a == 0xFF
         end
 
         @testset "shape inherits stroke width at time of drawing" begin

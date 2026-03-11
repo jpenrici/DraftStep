@@ -1,0 +1,78 @@
+# hello.draftstep — a simple house
+# Demonstrates: canvas, layers, groups, moveto, face, rect, color, fill, strokewidth.
+# pen_down is the default state — no pendown needed when using moveto.
+#
+# Angle convention (screen-space, origin at top-left):
+#   face 0   → right  (+x)
+#   face 90  → down   (+y)
+#   face 180 → left   (-x)
+#   face 270 → up     (-y)
+
+canvas 400 350
+
+# ── layer: base ───────────────────────────────
+# House body — rect 200x160 at (100, 140)
+layer "base"
+color #555555
+strokewidth 2 px
+fill #F5E6C8
+
+moveto 100 140
+rect 200 px 160 px
+
+# ── layer: roof ───────────────────────────────
+# Two-slope roof using two rects + a ridge cap
+layer "roof"
+color #8B3A3A
+strokewidth 1 px
+fill #C0392B
+
+moveto 100 45
+rect 100 px 95 px
+
+moveto 200 45
+rect 100 px 95 px
+
+# ridge cap
+fill #7B2929
+moveto 195 40
+rect 10 px 10 px
+
+# ── layer: details ────────────────────────────
+# Door and window as named groups
+layer "details"
+
+group "door"
+color #5D3A1A
+strokewidth 1 px
+fill #7B4F2E
+moveto 175 220
+rect 50 px 80 px
+
+group "window"
+color #2980B9
+strokewidth 1 px
+fill #AED6F1
+moveto 115 160
+rect 50 px 50 px
+
+# ── layer: path ───────────────────────────────
+# Front path: vertical line + two steps
+layer "path"
+color #888888
+strokewidth 3 px
+
+moveto 200 300
+face 90 deg
+pendown
+forward 50 px
+
+moveto 170 300
+face 0 deg
+pendown
+forward 60 px
+
+moveto 170 310
+face 0 deg
+pendown
+forward 60 px

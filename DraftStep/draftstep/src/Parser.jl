@@ -98,9 +98,16 @@ const ARG_GRAMMAR = Dict{String,Vector{Vector{Types.TokenKind}}}(
     "forward" => [_N, _U],
     "backward" => [_N, _U],
 
+    # --- Move to x and y coordinates ---
+    "moveto" => [_N, _N],
+
+    # --- Move to the origin ---
+    "home" => [],
+
     # --- Rotation (angle + unit) ---
     "left" => [_N, _U],
     "right" => [_N, _U],
+    "face" => [_N, _U],
 
     # --- Pen control (no arguments) ---
     "penup" => [],

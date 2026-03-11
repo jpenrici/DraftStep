@@ -79,6 +79,9 @@ const KEYWORDS = Set{String}([
     "backward",
     "left",
     "right",
+    "moveto",
+    "home",
+    "face",
 
     # --- Pen control ---
     "penup",

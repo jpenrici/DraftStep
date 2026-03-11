@@ -1,0 +1,120 @@
+# circles.draftstep — composition with circles
+# Demonstrates: filled circles, transparent circles, layering and color.
+#
+# The drawing is inspired by bubble/cell diagrams:
+#   - layer background : large soft backdrop circles
+#   - layer rings      : transparent outline-only rings
+#   - layer bubbles    : small vivid filled circles
+#   - layer accent     : tiny highlight dots
+
+canvas 500 400
+
+# ── layer: background ─────────────────────────
+# Large muted filled circles as a soft backdrop
+layer "background"
+strokewidth 0 px
+
+fill #E8D5F5
+moveto 120 130
+circle 100 px
+
+fill #D5EAF5
+moveto 340 200
+circle 110 px
+
+fill #F5EAD5
+moveto 240 310
+circle 90 px
+
+# ── layer: rings ──────────────────────────────
+# Transparent circles — stroke only, no fill
+layer "rings"
+fill #000000
+strokewidth 2 px
+
+color #9B59B6
+moveto 120 130
+circle 100 px
+
+color #2980B9
+moveto 340 200
+circle 110 px
+
+color #E67E22
+moveto 240 310
+circle 90 px
+
+# medium rings — overlapping areas
+color #27AE60
+strokewidth 1 px
+moveto 220 190
+circle 60 px
+
+color #C0392B
+moveto 280 230
+circle 55 px
+
+# ── layer: bubbles ────────────────────────────
+# Small vivid filled circles scattered across the canvas
+layer "bubbles"
+strokewidth 1 px
+
+color #8E44AD
+fill #D7BDE2
+moveto 80 80
+circle 25 px
+
+color #1A5276
+fill #AED6F1
+moveto 390 100
+circle 30 px
+
+color #1E8449
+fill #A9DFBF
+moveto 160 320
+circle 20 px
+
+color #784212
+fill #F0B27A
+moveto 420 310
+circle 28 px
+
+color #922B21
+fill #F1948A
+moveto 270 80
+circle 22 px
+
+color #1F618D
+fill #85C1E9
+moveto 80 260
+circle 18 px
+
+color #6C3483
+fill #C39BD3
+moveto 450 200
+circle 24 px
+
+# ── layer: accent ─────────────────────────────
+# Tiny white highlight dots — give bubbles a glossy feel
+layer "accent"
+color #FFFFFF
+fill #FFFFFF
+strokewidth 0 px
+
+moveto 68 68
+circle 6 px
+
+moveto 378 88
+circle 7 px
+
+moveto 150 308
+circle 5 px
+
+moveto 408 298
+circle 6 px
+
+moveto 258 68
+circle 5 px
+
+moveto 438 188
+circle 6 px

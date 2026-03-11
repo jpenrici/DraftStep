@@ -263,6 +263,19 @@ function exec_backward!(state::Types.DrawingState, args::Vector{Any}, line::Int)
     state.cursor.position = to
 end
 
+function exec_moveto!(state::Types.DrawingState, args::Vector{Any}, line::Int)
+    # The `moveto` command never leaves a trace.
+    # The `pen_down` remains unchanged for the next command.
+    x = to_px(args[1], "px", line)
+    y = to_px(args[2], "px", line)
+    state.cursor.position = Types.Point(x, y)
+end
+
+function exec_home!(state::Types.DrawingState, args::Vector{Any}, line::Int)
+    state.cursor.position = Types.Point(0.0, 0.0)
+    state.cursor.angle    = 0.0
+end
+
 # --- Rotation ---
 
 function exec_left!(state::Types.DrawingState, args::Vector{Any}, line::Int)
@@ -273,6 +286,10 @@ end
 function exec_right!(state::Types.DrawingState, args::Vector{Any}, line::Int)
     angle = to_deg(args[1], args[2], line)
     state.cursor.angle = normalize_angle(state.cursor.angle + angle)
+end
+
+function exec_face!(state::Types.DrawingState, args::Vector{Any}, line::Int)
+    state.cursor.angle = to_deg(args[1], args[2], line)
 end
 
 # --- Pen control ---
@@ -380,6 +397,9 @@ const EXECUTORS = Dict{String, Function}(
     "backward" => exec_backward!,
     "left" => exec_left!,
     "right" => exec_right!,
+    "moveto"=> exec_moveto!,
+    "home" => exec_home!,
+    "face" => exec_face!,
     "penup" => exec_penup!,
     "pendown" => exec_pendown!,
     "circle" => exec_circle!,

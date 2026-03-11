@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="500" height="400" viewBox="0 0 500 400">
+  <g id="layer-default" inkscape:label="default" inkscape:groupmode="layer">
+  </g>
+  <g id="layer-background" inkscape:label="background" inkscape:groupmode="layer">
+    <circle cx="120" cy="130" r="100" stroke="#000000" stroke-width="0" fill="#E8D5F5"/>
+    <circle cx="340" cy="200" r="110" stroke="#000000" stroke-width="0" fill="#D5EAF5"/>
+    <circle cx="240" cy="310" r="90" stroke="#000000" stroke-width="0" fill="#F5EAD5"/>
+  </g>
+  <g id="layer-rings" inkscape:label="rings" inkscape:groupmode="layer">
+    <circle cx="120" cy="130" r="100" stroke="#9B59B6" stroke-width="2" fill="#000000"/>
+    <circle cx="340" cy="200" r="110" stroke="#2980B9" stroke-width="2" fill="#000000"/>
+    <circle cx="240" cy="310" r="90" stroke="#E67E22" stroke-width="2" fill="#000000"/>
+    <circle cx="220" cy="190" r="60" stroke="#27AE60" stroke-width="1" fill="#000000"/>
+    <circle cx="280" cy="230" r="55" stroke="#C0392B" stroke-width="1" fill="#000000"/>
+  </g>
+  <g id="layer-bubbles" inkscape:label="bubbles" inkscape:groupmode="layer">
+    <circle cx="80" cy="80" r="25" stroke="#8E44AD" stroke-width="1" fill="#D7BDE2"/>
+    <circle cx="390" cy="100" r="30" stroke="#1A5276" stroke-width="1" fill="#AED6F1"/>
+    <circle cx="160" cy="320" r="20" stroke="#1E8449" stroke-width="1" fill="#A9DFBF"/>
+    <circle cx="420" cy="310" r="28" stroke="#784212" stroke-width="1" fill="#F0B27A"/>
+    <circle cx="270" cy="80" r="22" stroke="#922B21" stroke-width="1" fill="#F1948A"/>
+    <circle cx="80" cy="260" r="18" stroke="#1F618D" stroke-width="1" fill="#85C1E9"/>
+    <circle cx="450" cy="200" r="24" stroke="#6C3483" stroke-width="1" fill="#C39BD3"/>
+  </g>
+  <g id="layer-accent" inkscape:label="accent" inkscape:groupmode="layer">
+    <circle cx="68" cy="68" r="6" stroke="#FFFFFF" stroke-width="0" fill="#FFFFFF"/>
+    <circle cx="378" cy="88" r="7" stroke="#FFFFFF" stroke-width="0" fill="#FFFFFF"/>
+    <circle cx="150" cy="308" r="5" stroke="#FFFFFF" stroke-width="0" fill="#FFFFFF"/>
+    <circle cx="408" cy="298" r="6" stroke="#FFFFFF" stroke-width="0" fill="#FFFFFF"/>
+    <circle cx="258" cy="68" r="5" stroke="#FFFFFF" stroke-width="0" fill="#FFFFFF"/>
+    <circle cx="438" cy="188" r="6" stroke="#FFFFFF" stroke-width="0" fill="#FFFFFF"/>
+  </g>
+</svg>

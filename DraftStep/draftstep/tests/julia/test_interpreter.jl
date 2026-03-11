@@ -117,6 +117,29 @@ const ε = 1e-9
             @test abs(state.cursor.position.x - 100.0) < ε
         end
 
+        @testset "home reset position and angle" begin
+            state = run("forward 100 px\nright 90 deg\nhome\n")
+            @test state.cursor.position.x == 0.0
+            @test state.cursor.position.y == 0.0
+            @test state.cursor.angle      == 0.0
+        end
+
+        @testset "moveto positions the cursor in absolute coordinates" begin
+            state = run("moveto 200 150\n")
+            @test state.cursor.position.x == 200.0
+            @test state.cursor.position.y == 150.0
+        end
+
+        @testset "face defines absolute angle" begin
+            state = run("right 45 deg\nface 90 deg\n")
+            @test state.cursor.angle == 90.0
+        end
+
+        @testset "face with rad is converted" begin
+            state = run("face 1 rad\n")
+            @test abs(state.cursor.angle - (180.0 / π)) < 1e-9
+        end
+
     end # cursor movement
 
 

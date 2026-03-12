@@ -14,6 +14,7 @@
 # Examples:
 #   julia bin/draftstep examples/hello.draftstep
 #   julia bin/draftstep examples/hello.draftstep tmp/hello.svg
+#   julia bin/draftstep examples/hello.draftstep tmp/output/hello.svg
 #
 # Exit codes:
 #   0 — success

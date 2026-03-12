@@ -37,6 +37,10 @@ using Printf
 # Load modules — order: Types → Renderer → SVGRenderer
 # For Suite A also load: Lexer → Parser → Interpreter
 # ---------------------------------------------------------------------------
+
+include("../../src/Logger.jl")
+import .Logger
+
 include("../../src/Types.jl")
 import .Types
 

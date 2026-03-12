@@ -30,6 +30,8 @@
 
 module Lexer
 
+import ..Logger
+
 # Types must be loaded once by the caller before including this file:
 # include("Types.jl")
 # include("Lexer.jl")
@@ -296,7 +298,13 @@ function scan_color!(ls::LexerState, line::Int)::Types.Token
 
     hex = String(buf)
     if length(hex) != 3 && length(hex) != 6 && length(hex) != 8
-        throw(LexerError("invalid color literal '#$hex' — expected #RGB or #RRGGBB or #RRGGBBAA", line))
+        Logger.warn("invalid color literal '#$hex' — expected #RGB or #RRGGBB or #RRGGBBAA")
+        throw(
+            LexerError(
+                "invalid color literal '#$hex' — expected #RGB or #RRGGBB or #RRGGBBAA",
+                line,
+            ),
+        )
     end
 
     return Types.Token(Types.TK_COLOR, "#" * hex, line)
@@ -360,13 +368,13 @@ function tokenize(source::String)::Vector{Types.Token}
         if c == ' ' || c == '\t'
             advance!(ls)
 
-        # --- Newline ---
+            # --- Newline ---
         elseif c == '\n'
             push!(tokens, Types.Token(Types.TK_NEWLINE, "\\n", line))
             advance!(ls)
             ls.line += 1
 
-        # --- Windows-style line ending (CR+LF) ---
+            # --- Windows-style line ending (CR+LF) ---
         elseif c == '\r'
             advance!(ls)   # discard CR; LF will be handled next iteration
 
@@ -374,15 +382,15 @@ function tokenize(source::String)::Vector{Types.Token}
         elseif is_digit(c) || (c == '-' && is_digit(peek_next(ls)))
             push!(tokens, scan_number!(ls, line))
 
-        # --- Bare word: command keyword or unit ---
+            # --- Bare word: command keyword or unit ---
         elseif is_alpha(c)
             push!(tokens, scan_word!(ls, line))
 
-        # --- Quoted string ---
+            # --- Quoted string ---
         elseif c == '"'
             push!(tokens, scan_string!(ls, line))
 
-        # --- Color literal (#RRGGBB) or comment (# text) ---
+            # --- Color literal (#RRGGBB) or comment (# text) ---
         elseif c == '#'
             if is_hex_digit(peek_next(ls))
                 push!(tokens, scan_color!(ls, line))
@@ -390,13 +398,15 @@ function tokenize(source::String)::Vector{Types.Token}
                 push!(tokens, scan_comment!(ls, line))
             end
 
-        # --- Unknown character ---
+            # --- Unknown character ---
         else
             throw(LexerError("unexpected character '$(c)'", line))
         end
+
     end
 
     push!(tokens, Types.Token(Types.TK_EOF, "", ls.line))
+
     return tokens
 end
 
@@ -421,7 +431,7 @@ end
 # =============================================================================
 
 # Column widths for aligned output
-const _KIND_WIDTH  = 12
+const _KIND_WIDTH = 12
 const _VALUE_WIDTH = 24
 
 """
@@ -443,16 +453,16 @@ Useful for debugging the Lexer output without serializing to disk.
     [ 2]  TK_UNIT       "px"
     [ 2]  TK_EOF        ""
 """
-function print_tokens(tokens::Vector{Types.Token}; io::IO=stdout)
+function print_tokens(tokens::Vector{Types.Token}; io::IO = stdout)
     println(io, "─────────────────────────────────────────")
     println(io, "  DraftStep Lexer — token dump")
     println(io, "  total: $(length(tokens)) token(s)")
     println(io, "─────────────────────────────────────────")
 
     for tok in tokens
-        kind_str  = rpad(string(tok.kind),  _KIND_WIDTH)
+        kind_str = rpad(string(tok.kind), _KIND_WIDTH)
         value_str = lpad("\"$(tok.value)\"", _VALUE_WIDTH)
-        line_str  = lpad(string(tok.line), 3)
+        line_str = lpad(string(tok.line), 3)
         println(io, "  [$(line_str)]  $(kind_str)  $(value_str)")
     end
 

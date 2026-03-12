@@ -33,6 +33,10 @@ using Test
 # ---------------------------------------------------------------------------
 # Load modules — order matters: Types → Lexer → Parser → Interpreter
 # ---------------------------------------------------------------------------
+
+include("../../src/Logger.jl")
+import .Logger
+
 include("../../src/Types.jl")
 import .Types
 

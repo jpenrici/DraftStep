@@ -41,6 +41,7 @@
 
 module Parser
 
+import ..Logger
 import ..Types
 
 export parse, ParserError
@@ -199,6 +200,9 @@ function parse_arg(
 
     if tok.kind ∉ expected_kinds
         expected = join(string.(expected_kinds), " or ")
+        Logger.warn(
+            "unexpected arg kind $(tok.kind) for command '$cmd_name' at line $(tok.line)",
+        )
         throw(
             ParserError(
                 "command '$cmd_name': expected $expected but got $(tok.kind) " *

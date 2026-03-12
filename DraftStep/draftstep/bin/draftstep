@@ -4,17 +4,21 @@
 # =============================================================================
 #
 # Usage:
-#   julia bin/draftstep <input.draftstep> [output.svg]
+#   julia bin/draftstep <input.draftstep> [output.svg] [--quiet, --debug]
 #
 # Arguments:
 #   input.draftstep   path to the source file (required)
 #   output.svg        path for the SVG output  (optional)
 #                     default: same name as input with .svg extension
+# Options:
+#   --quiet           does not show any logs
+#   --debug           show processing with debug logs
 #
 # Examples:
 #   julia bin/draftstep examples/hello.draftstep
 #   julia bin/draftstep examples/hello.draftstep tmp/hello.svg
-#   julia bin/draftstep examples/hello.draftstep tmp/output/hello.svg
+#   julia bin/draftstep examples/hello.draftstep tmp/hello.svg --quiet
+#   julia bin/draftstep examples/hello.draftstep tmp/hello.svg --debug
 #
 # Exit codes:
 #   0 — success
@@ -29,6 +33,9 @@
 # ---------------------------------------------------------------------------
 const SCRIPT_DIR = dirname(abspath(@__FILE__))
 const SRC_DIR    = joinpath(SCRIPT_DIR, "..", "src")
+
+include(joinpath(SRC_DIR, "Logger.jl"))
+import .Logger
 
 include(joinpath(SRC_DIR, "Types.jl"))
 import .Types
@@ -58,15 +65,21 @@ function usage()
     DraftStep — command-driven vector drawing tool
 
     Usage:
-      julia bin/draftstep <input.draftstep> [output.svg]
+      julia bin/draftstep <input.draftstep> [output.svg] [--quiet, --debug]
 
     Arguments:
       input.draftstep   source file to interpret  (required)
       output.svg        SVG output path           (optional, default: <input>.svg)
 
+    Options:
+      --quiet           does not show any logs
+      --debug           show processing with debug logs
+
     Examples:
       julia bin/draftstep examples/hello.draftstep
       julia bin/draftstep examples/hello.draftstep tmp/hello.svg
+      julia bin/draftstep examples/hello.draftstep tmp/hello.svg --quiet
+      julia bin/draftstep examples/hello.draftstep tmp/hello.svg --debug
     """)
 end
 
@@ -88,66 +101,90 @@ end
 
 function main(args::Vector{String})
 
+    # --- Configure ---
+    local input_path = nothing
+    local output_path = nothing
+    local log_option = nothing
+
+    Logger.enable!(Logger.LOG_INFO)
+
     # --- Argument validation ---
-    if length(args) < 1 || length(args) > 2
+    if length(args) < 1 || length(args) > 3
         usage()
         exit(1)
     end
 
-    input_path  = args[1]
-    output_path = length(args) == 2 ? args[2] : default_output(input_path)
+    # --- Check arguments ---
+    for arg in args
+        if endswith(lowercase(arg), ".draftstep")
+            input_path = arg
+        elseif endswith(lowercase(arg), ".svg")
+            output_path = arg
+        elseif startswith(arg, "--")
+            log_option = lowercase(arg)
+        end
+    end
+
+    # --- Paths ---
+    if input_path == nothing
+        usage()
+        exit(1)
+    end
+
+    output_path = output_path !== nothing ? output_path : default_output(input_path)
 
     # --- Input file check ---
     if !isfile(input_path)
-        println(stderr, "error: input file not found: '$input_path'")
+        println(stderr, "[ERROR] input file not found: '$input_path'")
         exit(2)
     end
 
-    println("  input  : $input_path")
-    println("  output : $output_path")
-    println()
+    # --- Show Logs ---
+    if log_option == "--quiet"
+        Logger.disable!()
+    elseif log_option == "--debug"
+        Logger.enable!(Logger.LOG_DEBUG)
+    elseif log_option !== nothing
+        Logger.warn("unknown option '$log_option' — ignored")
+    end
+
+    Logger.info("input  : $input_path")
+    Logger.info("output : $output_path")
 
     # --- Lexer ---
-    print("  [1/4] tokenizing  ... ")
     local tokens
     try
         tokens = Lexer.tokenize_file(input_path)
-        println("$(length(tokens)) tokens")
+        Logger.info("[1/4] tokenizing — $(length(tokens)) tokens")
     catch e
-        println("FAILED")
-        println(stderr, "\n$(e)")
+        Logger.error("[1/4] tokenizing — FAILED\n$(e)")
         exit(3)
     end
 
     # --- Parser ---
-    print("  [2/4] parsing     ... ")
     local program
     try
         program = Parser.parse(tokens)
-        println("$(length(program.commands)) commands")
+        Logger.info("[2/4] parsing — $(length(program.commands)) commands")
     catch e
-        println("FAILED")
-        println(stderr, "\n$(e)")
+        Logger.error("[2/4] parsing — FAILED\n$(e)")
         exit(3)
     end
 
     # --- Interpreter ---
-    print("  [3/4] interpreting ... ")
     local state
     try
         state = Interpreter.execute(program)
         total = sum(
             length(l.shapes) + sum(length(g.shapes) for g in l.groups; init=0)
             for l in state.layers; init=0)
-        println("$(length(state.layers)) layers, $total shapes")
+        Logger.info("[3/4] interpreting — $(length(state.layers)) layers, $total shapes")
     catch e
-        println("FAILED")
-        println(stderr, "\n$(e)")
+        Logger.error("[3/4] interpreting — FAILED\n$(e)")
         exit(4)
     end
 
     # --- Renderer ---
-    print("  [4/4] rendering   ... ")
     try
         # Ensure output directory exists
         out_dir = dirname(output_path)
@@ -156,15 +193,13 @@ function main(args::Vector{String})
         end
         SVGRenderer.render(state, output_path)
         size_kb = round(filesize(output_path) / 1024; digits=1)
-        println("$(size_kb) KB")
+        Logger.info("[4/4] rendering — $(size_kb) KB")
     catch e
-        println("FAILED")
-        println(stderr, "\n$(e)")
+        Logger.error("[4/4] rendering — FAILED\n$(e)")
         exit(4)
     end
 
-    println()
-    println("  done → $output_path")
+    Logger.info("Done → $output_path")
 end
 
 

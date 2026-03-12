@@ -37,6 +37,7 @@
 
 module SVGRenderer
 
+import ..Logger
 import ..Types
 import ..Renderer
 
@@ -226,6 +227,7 @@ function svg_shape(r::SVG, shape::Types.Shape)::String
     elseif shape.kind == Types.SK_BEZIER
         return svg_bezier(r, shape)
     else
+        Logger.error("unsupported shape kind: $(shape.kind)")
         throw(Renderer.RendererError("unsupported shape kind: $(shape.kind)"))
     end
 end
@@ -289,6 +291,9 @@ function build_svg(r::SVG, state::Types.DrawingState)::String
         end
 
         push!(lines, "$(pad)</g>")
+
+        Logger.debug("rendering layer '$(layer.name)' — " *
+            "$(length(layer.shapes)) shapes, $(length(layer.groups)) groups")
     end
 
     push!(lines, "</svg>")

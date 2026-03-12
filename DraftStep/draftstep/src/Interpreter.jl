@@ -33,6 +33,7 @@
 
 module Interpreter
 
+import ..Logger
 import ..Types
 
 export execute, InterpreterError
@@ -243,6 +244,7 @@ function exec_forward!(state::Types.DrawingState, args::Vector{Any}, line::Int)
             state.active_group,
         )
         emit_shape!(state, shape)
+
     end
 
     state.cursor.position = to
@@ -265,6 +267,7 @@ function exec_backward!(state::Types.DrawingState, args::Vector{Any}, line::Int)
             state.active_group,
         )
         emit_shape!(state, shape)
+
     end
 
     state.cursor.position = to
@@ -276,6 +279,11 @@ function exec_moveto!(state::Types.DrawingState, args::Vector{Any}, line::Int)
     x = to_px(args[1], "px", line)
     y = to_px(args[2], "px", line)
     state.cursor.position = Types.Point(x, y)
+
+    if x < 0 || x > state.canvas_width || y < 0 || y > state.canvas_height
+        Logger.warn("moveto ($x, $y) outside canvas " *
+            "($(state.canvas_width) x $(state.canvas_height)) at line $line")
+    end
 end
 
 function exec_home!(state::Types.DrawingState, args::Vector{Any}, line::Int)
@@ -465,6 +473,10 @@ function execute(
     end
 
     for cmd in program.commands
+        if !haskey(EXECUTORS, cmd.name)
+            Logger.warn("unknown command '$(cmd.name)' at line $(cmd.line) — skipping")
+            continue
+        end
         execute_command!(state, cmd)
     end
 

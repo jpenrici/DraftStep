@@ -153,8 +153,8 @@ function log(level::LogLevel, msg::String)
     level < LEVEL[] && return
     prefix =
         level == LOG_DEBUG ? "DEBUG" :
-        level == LOG_INFO ? "INFO " :
-        level == LOG_WARN ? "WARN " : "ERROR"
+        level == LOG_INFO ? "INFO" :
+        level == LOG_WARN ? "WARN" : "ERROR"
     println(stderr, "[$prefix] $msg")
 end
 

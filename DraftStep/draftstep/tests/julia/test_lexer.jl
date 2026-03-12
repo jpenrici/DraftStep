@@ -23,12 +23,15 @@ using Test
 # `import ..Types` resolves to the same module instance used in the tests.
 # Both share Main.Types — no double-include, no identity mismatch!
 # ---------------------------------------------------------------------------
+
+include("../../src/Logger.jl")
+import .Logger
+
 include("../../src/Types.jl")
 import .Types
 
 include("../../src/Lexer.jl")
 import .Lexer
-
 
 # =============================================================================
 # Helpers
